@@ -1,0 +1,28 @@
+DIABETES PREDICTION DATASET INFORMATION
+==================================================
+Dataset Shape: (520, 17)
+
+Columns:
+  - Age: int64
+  - Gender: object
+  - Polyuria: object
+  - Polydipsia: object
+  - sudden weight loss: object
+  - weakness: object
+  - Polyphagia: object
+  - Genital thrush: object
+  - visual blurring: object
+  - Itching: object
+  - Irritability: object
+  - delayed healing: object
+  - partial paresis: object
+  - muscle stiffness: object
+  - Alopecia: object
+  - Obesity: object
+  - class: object
+
+Missing Values: 0
+
+Target Distribution:
+  Positive: 320 (61.5%)
+  Negative: 200 (38.5%)
