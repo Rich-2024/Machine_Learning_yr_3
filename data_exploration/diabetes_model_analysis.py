@@ -9,12 +9,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.semi_supervised import LabelPropagation, LabelSpreading
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import shap
+import joblib
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -52,18 +53,20 @@ print(f"Positive cases: {sum(y)}, Negative cases: {len(y)-sum(y)}")
 # --------------------------
 # 3. TRAIN-TEST SPLIT
 # --------------------------
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42, stratify=y)
+X_train, X_test, y_train, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42, stratify=y
+)
 
 # --------------------------
 # 4. SUPERVISED MODELS
 # --------------------------
 
-# --- Logistic Regression ---
+# Logistic Regression
 logreg = LogisticRegression(max_iter=1000)
 logreg.fit(X_train, y_train)
 y_pred_lr = logreg.predict(X_test)
 
-# --- Random Forest ---
+# Random Forest
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
 rf.fit(X_train, y_train)
 y_pred_rf = rf.predict(X_test)
@@ -71,7 +74,6 @@ y_pred_rf = rf.predict(X_test)
 # --------------------------
 # 5. SEMI-SUPERVISED MODELS
 # --------------------------
-# Create semi-supervised labels (20% labeled)
 def create_semi_supervised_labels(y, labeled_ratio=0.2, random_state=42):
     np.random.seed(random_state)
     y_semi = y.copy()
@@ -83,12 +85,12 @@ def create_semi_supervised_labels(y, labeled_ratio=0.2, random_state=42):
 
 y_semi, labeled_idx, unlabeled_idx = create_semi_supervised_labels(y_train, 0.2)
 
-# --- Label Propagation ---
+# Label Propagation
 lp = LabelPropagation(kernel='knn', n_neighbors=5, max_iter=1000)
 lp.fit(X_train, y_semi)
 y_pred_lp = lp.predict(X_test)
 
-# --- Label Spreading ---
+# Label Spreading
 ls = LabelSpreading(kernel='knn', n_neighbors=5, alpha=0.5, max_iter=1000)
 ls.fit(X_train, y_semi)
 y_pred_ls = ls.predict(X_test)
@@ -112,12 +114,10 @@ results['Label Propagation'] = evaluate_model(y_test, y_pred_lp, 'Label Propagat
 results['Label Spreading'] = evaluate_model(y_test, y_pred_ls, 'Label Spreading')
 
 # --------------------------
-# 7. FEATURE IMPORTANCE / EXPLAINABILITY (RF + SHAP)
+# 7. FEATURE IMPORTANCE / SHAP
 # --------------------------
 explainer = shap.Explainer(rf, X_train)
 shap_values = explainer(X_test)
-
-# Plot top features
 shap.summary_plot(shap_values, features=X_test, feature_names=symptom_cols, show=True)
 
 # --------------------------
@@ -144,3 +144,24 @@ plt.xlabel("PC1")
 plt.ylabel("PC2")
 plt.colorbar(label='Diabetes Risk')
 plt.show()
+
+# --------------------------
+# 10. SAVE MODELS
+# --------------------------
+model_dir = '../models'  # Save models in root directory
+
+if not os.path.exists(model_dir):
+    os.makedirs(model_dir)
+
+trained_models = {
+    'logistic_regression': logreg,
+    'random_forest': rf,
+    'label_propagation': lp,
+    'label_spreading': ls,
+    'scaler': scaler
+}
+
+for name, model in trained_models.items():
+    file_path = os.path.join(model_dir, f"{name}.joblib")
+    joblib.dump(model, file_path)
+    print(f"Saved {name} to {file_path}")
