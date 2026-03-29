@@ -6,14 +6,9 @@ import gradio as gr
 # --------------------------
 # Load model and scaler
 # --------------------------
-<<<<<<< HEAD
 model_dir = "models"
-=======
-model_dir = "../models"
->>>>>>> c6239c9839bda08a88b36d7d37662ee06a3b8c13
 rf = joblib.load(os.path.join(model_dir, "random_forest.joblib"))
 scaler = joblib.load(os.path.join(model_dir, "scaler.joblib"))
-
 # Symptom columns (must match training order)
 symptom_cols = [
     "Polyuria",
